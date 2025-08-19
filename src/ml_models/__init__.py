@@ -6,9 +6,9 @@ from .vision import ImageGenerationModel
 
 
 __all__ = [ 
-    ChatLLM,
-    ClassificationModel,
-    EmbeddingModel,
-    RerankingModel,
-    ImageGenerationModel
+    "ChatLLM",
+    "ClassificationModel",
+    "EmbeddingModel",
+    'RerankingModel',
+    "ImageGenerationModel"
 ]

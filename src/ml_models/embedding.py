@@ -1,4 +1,4 @@
-from ast import List
+from typing import List
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_huggingface import HuggingFaceEmbeddings
 

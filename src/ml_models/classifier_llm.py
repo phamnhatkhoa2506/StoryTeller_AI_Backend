@@ -25,7 +25,8 @@ class GeminiClassificationModel(object):
         self.model = ChatGoogleGenerativeAI(
             model=model,
             temperature=0.0,
-            max_tokens=10
+            max_tokens=1000,
+            api_key=env_config.GOOGLE_API_KEY
         )
         self.prompt_template = prompt_template
 
@@ -33,17 +34,32 @@ class GeminiClassificationModel(object):
         self, 
         **params
     ) -> str:
-        label = self.model.invoke(
-            self.prompt_template.invoke({**params})
-        )
+        prompt_value = self.prompt_template.invoke({"requirement": params.get("requirement")})
+       
+        # If prompt_value has to_messages, use it; else, use as is
+        if hasattr(prompt_value, 'to_messages'):
+            prompt_for_model = prompt_value.to_messages()
+        else:
+            prompt_for_model = prompt_value
+        # logger.info(f"Prompt for model: {prompt_for_model!r}")
 
-        if label not in UserIntentEnum:
-            return UserIntentEnum.OTHER
+        response = self.model.invoke(prompt_for_model)
+        # logger.info(f"Model Response: {response!r}")
 
-        return label
+        label = response.content \
+                    if hasattr(response, "content") \
+                        else response
+
+        logger.info(f"Label: {label}")
+
+        return UserIntentEnum.OTHER \
+            if label not in UserIntentEnum \
+                else label
 
 
 class HuggingFaceClassificationModel(object):
+    """Huggingface Classification Model"""
+
     def __init__(self) -> None:
         pass
 

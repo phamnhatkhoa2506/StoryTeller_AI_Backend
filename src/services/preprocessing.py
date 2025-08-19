@@ -11,6 +11,7 @@ class PreprocessingService:
     def remove_whitespace(string: str) -> str:    
         string = string.replace("\n\n", "").replace("\n", "")
         string = string.strip()
+        string = " ".join(string.split())
 
         return string
 

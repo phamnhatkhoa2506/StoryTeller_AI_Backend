@@ -1,4 +1,3 @@
-from langchain_core.messages import SystemMessage, HumanMessage
 from langchain.prompts import ChatPromptTemplate
 from src.ml_models import ClassificationModel
 
@@ -29,13 +28,15 @@ class IntentClassificationService:
     Do not output anything else.
     """
 
+    INTENT_CLASSIFICATION_USER_PROMPT = "Classify this intent: {requirement}"
+
     model = ClassificationModel(
         model="gemini-2.5-flash",
         framework="gemini",
         name="Intent Classification Model",
-        prompt_template=ChatPromptTemplate([
-            SystemMessage(content=INTENT_CLASSIFICATION_SYSTEM_PROMPT),
-            HumanMessage(content="Classify this intent: {requirement}")
+        prompt_template=ChatPromptTemplate.from_messages([
+            ("system", INTENT_CLASSIFICATION_SYSTEM_PROMPT),
+            ("human", INTENT_CLASSIFICATION_USER_PROMPT)
         ])
     )
 

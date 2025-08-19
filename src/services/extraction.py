@@ -3,7 +3,12 @@ from typing import Any, Dict
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from ml_models.chat_llm import ChatLLM
+from src.ml_models.chat_llm import ChatLLM
+from src.logger.logger import Logger
+
+
+logger = Logger()
+
 
 class ExtractionService:
     EXTRACTOR_SYSTEM_PROMPT = """You are an expert information extractor.  
@@ -16,22 +21,32 @@ class ExtractionService:
     {
         "characters": [ "list of characters explicitly mentioned" ],
         "genres": [ "list of genres or styles requested" ],
-        "conversations": [ "sample dialogues or quoted conversations provided by the user" ],
+        "conversations": [ "sample dialogues or quoted conversations provided by the user, include characters with there conversation" ],
         "context": "the setting, environment, or time period of the story",
         "description": "general description or summary of the story idea",
         "emotions": [ "list of emotions or moods expressed in the story" ]
     }
     """
 
+    EXTRACTOR_USER_PROMPT = "{requirement}"
+
     llm_model = ChatLLM(
         model="gemini-2.5-flash",
         framework="gemini",
-        name="Entity Extracting Model"
+        name="Entity Extracting Model",
+        
     )
 
     @classmethod
     def extract(cls, prompt: str) -> Dict[str, Any]:
-        result = cls.llm_model.invoke(prompt)
+        result = cls.llm_model.invoke([
+            SystemMessage(content=cls.EXTRACTOR_SYSTEM_PROMPT),
+            HumanMessage(content=cls.EXTRACTOR_USER_PROMPT.format(requirement=prompt))
+        ]).content
+
+        result = result.replace("```", "").replace("json", "").strip()
+
+        logger.info(f"Result: {result}")
 
         json_response = json.loads(result)
 
