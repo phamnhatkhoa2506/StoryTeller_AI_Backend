@@ -1,0 +1,21 @@
+# Server backend
+fastapi
+uvicorn
+
+# Data structure
+pydantic
+
+# LLM and Agents
+langchain
+langchain-community
+langchain-core
+langchain-google-genai
+langchain-groq
+langchain-huggingface
+langchain-cohere
+cohere
+transformers
+sentence-transformers
+torch
+google-genai
+pillows
