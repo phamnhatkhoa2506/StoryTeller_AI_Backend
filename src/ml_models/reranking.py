@@ -1,17 +1,14 @@
-from ast import List
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_huggingface import HuggingFaceEmbeddings
-
 from src.api import JinaAPI, CohereAPI
 from src.enums import LLMModelEnum
 from src.logger.logger import Logger
 from src.configs import env_config
+from src.ml_models.base import BaseRerankingModel, BaseMLModel
 
 
 logger = Logger()
 
 
-class RerankingModel(object):
+class RerankingModel(BaseMLModel):
     """
         Embedding model
     """

@@ -1,21 +1,25 @@
+import json
 import cohere
 from cohere import ClassifyExample
 from typing import Any, List, Dict, Optional
+from typing_extensions import deprecated
 
 from src.logger.logger import Logger
 from src.configs import env_config
+from src.api.base import BaseAPI
 
 
 logger = Logger()
 
 
-class CohereAPI(object):
+class CohereAPI(BaseAPI):
     """A class that call the api from Cohere"""
 
     def __init__(self) -> None:
         self.client = cohere.Client(api_key=env_config.COHERE_API_KEY)
         self.clientv2 = cohere.ClientV2(api_key=env_config.COHERE_API_KEY)
 
+    @deprecated("The method can not be used because there's no finetuned models")
     def classify(
         self, 
         model: str, 
@@ -103,59 +107,53 @@ class CohereAPI(object):
         model: str, 
         input: List[Dict[str, Any]], 
         task: Optional[str] = None,
+        embedding_types: List[str] = ["float"],
         **kwargs
-    ) -> Dict | None:
+    ) -> List[List[float]]:
         """
             Call the embedding API
 
             Parameters:
                 - model: model name for cohere api
-                - input: list of strings of input texts with for mat
+                - input: list of strings of input texts with format
+                    [
+                        {
+                            "content": [
+                                {"type": "text", "text": "hello"},
+                                {"type": "text", "text": "goodbye"}
+                            ]
+                        },
+                    ]
                 - task: task for embedding include "text-matching", "classification", "seperation", ...
                 - embedding_types: list of embedding type
 
-            Return result from api with format below
-            {
-                "{data-type}": [
-                    [
-                        ...,
-                        ...,
-                        ...,
-                    ],
-                    ...
-                ],
-                ...
-            }
-
+            Return result from api with list of list of float
         """
 
         if not input:
             return 
 
         try:
+            logger.info(f"Input: {input}")
+
             response = self.clientv2.embed(
                 model=model,
                 inputs=input,
                 input_type=task,
+                embedding_types=embedding_types,
                 **kwargs
             )
 
-            if response.status_code == 200:
-                response = response.json()
+            response = json.loads(response.json())
 
-                logger.info(f"Embdedding: {len(response['embeddings'])}")
+            logger.info(f"Json: {response}")
 
-                return response["embeddings"]
-
-            else:
-                logger.error(f"Call embdedding API failed, code: {response.status_code}, response: {response.json()}")
-
-            return {}
+            return response["embeddings"]["float_"]
         
         except Exception as e:
             logger.error(f"Call embdedding API failed: {str(e)}" )
             
-            return {}
+            return []
 
     def rerank(
         self,

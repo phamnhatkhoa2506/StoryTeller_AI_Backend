@@ -26,10 +26,30 @@
 
 
 # Run code
-    uvicorn src.app:app --reload
+    <pre>
+        uvicorn src.app:app --reload
+    </pre>
+    
 
 # Run test
     <pre>python -m tests.<test_file_name></pre>
 
     If you want to run single test case
-    <pre>python -m unittest tests.test_<name>.Test<Name>.test_<method></method></pre>
+    <pre>
+        python -m unittest tests.test_<name>.Test<Name>.test_<method>
+    </pre>
+
+    Or:
+    
+    Use decorator to skip test method, example
+    <pre>
+        @unittest.skip("...")
+        def test_method(self, ...):
+            ...
+    </pre>
+
+# Create auth file for chroma 
+    <pre>docker run --rm --entrypoint htpasswd httpd:2 -Bbn <username> <password> >> server.htpasswd</pre>
+
+# Run docker compose
+    <pre>docker compose up -d</pre>

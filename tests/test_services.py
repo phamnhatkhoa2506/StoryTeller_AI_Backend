@@ -15,9 +15,9 @@ class TestServices(unittest.TestCase):
         dkdjhf dklj  f
         """
 
-        string = self.preprocessing_service.remove_whitespace(string)
+        string = self.preprocessing_service._remove_whitespace(string)
         print(string)
-        string = self.preprocessing_service.normalize(string)
+        string = self.preprocessing_service._normalize(string)
         print(string)
         lang = self.preprocessing_service.detect_language(string)
         print(lang)

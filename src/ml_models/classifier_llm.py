@@ -1,4 +1,5 @@
-from typing import List
+from typing import List, Any
+from typing_extensions import deprecated
 from langchain_core.messages import BaseMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -7,12 +8,13 @@ from src.enums import LLMModelEnum, UserIntentEnum
 from src.logger.logger import Logger
 from src.configs import env_config
 from src.api import CohereAPI, JinaAPI
+from src.ml_models.base import BaseMLModel, BaseClassificationModel
 
 
 logger = Logger()
 
 
-class GeminiClassificationModel(object):
+class GeminiClassificationModel(BaseClassificationModel):
     """
         Classification Model Class for Gemini 
     """
@@ -34,6 +36,14 @@ class GeminiClassificationModel(object):
         self, 
         **params
     ) -> str:
+        """ 
+            The method for classification
+
+            Parameters:
+                Require parameters in the prompt template
+
+            Return the label
+        """
         prompt_value = self.prompt_template.invoke({"requirement": params.get("requirement")})
        
         # If prompt_value has to_messages, use it; else, use as is
@@ -56,15 +66,47 @@ class GeminiClassificationModel(object):
             if label not in UserIntentEnum \
                 else label
 
+    def __call__(
+        self, 
+        **params
+    ) -> str:
+        return self.classify(**params)
 
-class HuggingFaceClassificationModel(object):
+
+class HuggingFaceClassificationModel(BaseClassificationModel):
     """Huggingface Classification Model"""
 
     def __init__(self) -> None:
         pass
 
+    def __call__(self, **params) -> Any:
+        pass
 
-class ClassificationModel(object):
+
+@deprecated("The class can not be used because there's no finetuned models")
+class CohereClassificationModel(BaseClassificationModel):
+    """ The class call classification API from Cohere"""
+
+    def __init__(self, model: str) -> None:
+        self.api = CohereAPI()
+        self.model = model
+
+    def __call__(self, **params) -> str:
+        self.api.classify(model=self.model, **params)
+
+
+class JinaClassificationModel(BaseClassificationModel):
+    """ The class call classification API from Cohere"""
+
+    def __init__(self, model: str) -> None:
+        self.api = JinaAPI()
+        self.model = model
+
+    def __call__(self, **params) -> str:
+        return self.api.classify(model=self.model, **params)
+
+
+class ClassificationModel(BaseMLModel):
     """
         Classification Model 
     """
@@ -88,7 +130,6 @@ class ClassificationModel(object):
         """
         
         self.name = name
-        self.model = model
         
         if LLMModelEnum.GEMINI == framework:
             self.model = GeminiClassificationModel(
@@ -104,15 +145,15 @@ class ClassificationModel(object):
                 # **kwargs
             )
         elif LLMModelEnum.COHERE  == framework:
-            self.model = CohereAPI()
+            self.model = CohereClassificationModel(model=model)
         elif LLMModelEnum.JINA  == framework:
-            self.model = JinaAPI()
+            self.model = JinaClassificationModel(model=model)
         else:
             raise ValueError("Model not supported")
 
         logger.info(f"Load chat model {model} succesfully")
 
-    def classify(self, **kwargs) -> str:
+    def __call__(self, *args: Any, **kwargs: Any) -> str:
         """
             The classification method
 
@@ -121,4 +162,4 @@ class ClassificationModel(object):
                 If the model is Gemini, you need to provide parameters of the prompt template
         """
 
-        return self.model.classify(**kwargs)
+        return self.model(**kwargs)

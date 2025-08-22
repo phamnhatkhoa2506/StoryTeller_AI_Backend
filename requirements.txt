@@ -18,4 +18,10 @@ transformers
 sentence-transformers
 torch
 google-genai
-pillows
+
+# Image
+pillow
+
+# Vector Store
+langchain-chroma
+langchain-text-splitters

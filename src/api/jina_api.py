@@ -3,18 +3,21 @@ from typing import List, Dict, Optional
 
 from src.configs import env_config
 from src.logger.logger import Logger
+from src.api.base import BaseAPI
+from src.configs import env_config
 
 
 logger = Logger()
 
-class JinaAPI(object):
-   
+
+class JinaAPI(BaseAPI):
+    """API Class calling APIs from Jina Server"""
 
     def __init__(self) -> None:
         self.urls = {
-            "classifier": "https://api.jina.ai/v1/classify",
-            "embedding" : "https://api.jina.ai/v1/embeddings",
-            "reranking" : "https://api.jina.ai/v1/rerank",
+            "classifier": f"{env_config.JINA_API_URL}/classify",
+            "embedding" : f"{env_config.JINA_API_URL}/embeddings",
+            "reranking" : f"{env_config.JINA_API_URL}/rerank",
          }
 
     def classify(
@@ -78,9 +81,13 @@ class JinaAPI(object):
             if response.status_code == 200:
                 response = response.json()
 
-                logger.info(f"Classfier: label {response['data'][0]['prediction']}")
+                labels = [
+                    obj["prediction"] for obj in response["data"]
+                ]
 
-                return response['data'][0]['prediction']
+                logger.info(f"Classfier: labels {labels}")
+
+                return labels
 
             else:
                 logger.error(f"Call classification API failed, code: {response.status_code}, response: {response.json()}")
@@ -94,7 +101,7 @@ class JinaAPI(object):
         input: List[str], 
         task: Optional[str] = None,
         **kwargs
-    ) -> Dict | None:
+    ) -> List[List[float]]:
         """
             Call the embedding API
 
@@ -104,51 +111,45 @@ class JinaAPI(object):
                 - task: task for embedding include "text-matching", "classification", "seperation", ...
                 - embedding_types: list of embedding type
 
-            Return result from api with format below
-            [
-                {
-                    "object": "embedding",
-                    "index": 0,
-                    "embedding": [
-                        0.00917551,
-                        0.10317657,
-                        0.04924633,
-                        -0.0906964,
-                        0.03671517,
-                        ...
-                    ]
-                },
-                ...
-            ]
+            Return result from api
         """
 
-        data = {
-            "model": model,
-            "input": input,
-            "task": task,
-            **kwargs
-        }
+        try:
+            data = {
+                "model": model,
+                "input": input,
+                "task": task,
+                **kwargs
+            }
 
-        response = requests.post(
-            self.urls["embedding"],
-            headers={
-                "authorization": f"Bearer {env_config.JINA_API_KEY}",
-                "content-type": "application/json"
-            },
-            json=data
-        )
+            response = requests.post(
+                self.urls["embedding"],
+                headers={
+                    "authorization": f"Bearer {env_config.JINA_API_KEY}",
+                    "content-type": "application/json"
+                },
+                json=data
+            )
 
-        if response.status_code == 200:
-            response = response.json()
+            if response.status_code == 200:
+                response = response.json()
 
-            logger.info(f"Embedding: tokens {response['usage']}")
+                logger.info(f"Embedding: tokens {response['usage']}")
 
-            return response["data"]
+                response = [
+                    obj["embedding"] for obj in response["data"]
+                ]
 
-        else:
-            logger.error(f"Call embedding API failed, code: {response.status_code}, response: {response.json()}")
+                return response
 
-            return None
+            else:
+                logger.error(f"Call embedding API failed, code: {response.status_code}, response: {response.json()}")
+
+                return []
+        except Exception as e:
+            logger.error(f"Call embedding API failed: {str(e)}")
+
+            return []
 
     def rerank(
         self,

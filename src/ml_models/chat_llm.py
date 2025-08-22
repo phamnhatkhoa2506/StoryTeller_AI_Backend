@@ -3,18 +3,18 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langchain_huggingface import ChatHuggingFace, HuggingFacePipeline
 from langchain_cohere.chat_models import ChatCohere
-from langchain.chat_models.base import BaseChatModel
 
 from src.enums import LLMModelEnum
 from src.configs import env_config
 from src.logger.logger import Logger
 from src.utils.constants import DEFAULT_ERROR_MESSAGE
+from src.ml_models.base import BaseChatModel, BaseMLModel
 
 
 logger = Logger()
 
 
-class ChatLLM(object):
+class ChatLLM(BaseMLModel):
     """
         Chat Model 
     """
@@ -90,9 +90,17 @@ class ChatLLM(object):
 
         logger.info(f"Load chat model {model} succesfully")
 
-    def invoke(self, input: Any) -> Any:
+    def __call__(self, input: Any, **kwarg: Any) -> str:
+        """
+            The call method to call the LLM
+
+            Parameters:
+                input: can be a string or a value invoked by PromptTemplate
+
+            Return the output of string
+        """
         try:
-            output = self.model.invoke(input)
+            output = self.model.invoke(input).output
 
             logger.info(f"Output: {output.content}")
 

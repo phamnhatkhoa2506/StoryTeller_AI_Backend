@@ -18,7 +18,9 @@ app.add_middleware(
 )
 
 # Mount static file
+# Just for development, after development you can delete it
 app.mount("/logs", StaticFiles(directory="./logs"), name="log_dir")
+app.mount("/vector_data", StaticFiles(directory="./vector_data"), name="vector_data_dir")
 
 # Include the router with /api/v1 as the prefix
 app.include_router(chat_router, prefix="/api/v1")

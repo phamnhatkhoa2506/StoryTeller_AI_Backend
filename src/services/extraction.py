@@ -5,12 +5,13 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 from src.ml_models.chat_llm import ChatLLM
 from src.logger.logger import Logger
+from src.services.base import BaseService
 
 
 logger = Logger()
 
 
-class ExtractionService:
+class ExtractionService(BaseService):
     EXTRACTOR_SYSTEM_PROMPT = """You are an expert information extractor.  
     Your task is to analyze a user’s storytelling request and extract key structured features.  
     Do not create or imagine new content — only extract what is explicitly provided.  
@@ -39,10 +40,10 @@ class ExtractionService:
 
     @classmethod
     def extract(cls, prompt: str) -> Dict[str, Any]:
-        result = cls.llm_model.invoke([
+        result = cls.llm_model([
             SystemMessage(content=cls.EXTRACTOR_SYSTEM_PROMPT),
             HumanMessage(content=cls.EXTRACTOR_USER_PROMPT.format(requirement=prompt))
-        ]).content
+        ])
 
         result = result.replace("```", "").replace("json", "").strip()
 

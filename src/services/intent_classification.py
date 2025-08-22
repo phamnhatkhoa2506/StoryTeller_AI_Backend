@@ -1,8 +1,10 @@
 from langchain.prompts import ChatPromptTemplate
+
 from src.ml_models import ClassificationModel
+from src.services.base import BaseService
 
 
-class IntentClassificationService:
+class IntentClassificationService(BaseService):
 
     INTENT_CLASSIFICATION_SYSTEM_PROMPT = """You are an expert intent classifier for storytelling tasks.  
     Your job is to analyze a user query and classify it into **exactly one** of the following intent labels:
@@ -42,4 +44,4 @@ class IntentClassificationService:
 
     @classmethod
     def classify(cls, prompt: str) -> str:
-        return cls.model.classify(requirement=prompt)
+        return cls.model(requirement=prompt)
